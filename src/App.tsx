@@ -39,6 +39,7 @@ function App() {
   const [zoom, setZoom] = useState(35);
   const [primaryImageSize, setPrimaryImageSize] = useState({ width: 0, height: 0 });
   const [referenceImageSize, setReferenceImageSize] = useState({ width: 0, height: 0 });
+  const [isContextOpen, setIsContextOpen] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -142,6 +143,10 @@ function App() {
     if (!selectedDrawing) return "";
     return getPrimaryImage(selectedDrawing, primaryDiscipline, primaryRevision);
   }, [primaryDiscipline, primaryRevision, selectedDrawing]);
+
+  useEffect(() => {
+    setPrimaryImageSize({ width: 0, height: 0 });
+  }, [primaryImage]);
 
   const primaryTransform = useMemo(
     () => getPrimaryTransform(primaryDiscipline, primaryRevision),
@@ -263,7 +268,13 @@ function App() {
   }
 
   return (
-    <div className="grid h-screen grid-cols-1 overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 xl:grid-cols-[280px_minmax(0,1fr)_320px]">
+    <div
+      className={`grid h-screen grid-cols-1 overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 ${
+        isContextOpen
+          ? "xl:grid-cols-[280px_minmax(0,1fr)_240px]"
+          : "xl:grid-cols-[280px_minmax(0,1fr)_48px]"
+      }`}
+    >
       <DrawingSidebar
         drawings={drawings}
         selectedDrawingId={selectedDrawing.id}
@@ -343,21 +354,41 @@ function App() {
         )}
       </main>
 
-      <ContextPanel
-        breadcrumb={breadcrumb}
-        selectedDrawingName={selectedDrawing.name}
-        selectedDiscipline={selectedDiscipline}
-        primaryRevision={primaryRevision}
-        primaryRelativeTo={primaryTransform.relativeTo}
-        hasActivePolygon={Boolean(activePolygon)}
-        overlayEnabled={overlayEnabled}
-        overlayImage={overlayImage}
-        overlayDisciplineName={overlayDisciplineName}
-        overlayLatestRevisionVersion={overlayLatestRevision?.version}
-        overlayTransformCompatible={transformDelta.compatible}
-        revisions={revisions}
-        onRevisionClick={setSelectedRevision}
-      />
+      {isContextOpen ? (
+        <ContextPanel
+          breadcrumb={breadcrumb}
+          selectedDrawingName={selectedDrawing.name}
+          selectedDiscipline={selectedDiscipline}
+          primaryRevision={primaryRevision}
+          primaryRelativeTo={primaryTransform.relativeTo}
+          hasActivePolygon={Boolean(activePolygon)}
+          overlayEnabled={overlayEnabled}
+          overlayImage={overlayImage}
+          overlayDisciplineName={overlayDisciplineName}
+          overlayLatestRevisionVersion={overlayLatestRevision?.version}
+          overlayTransformCompatible={transformDelta.compatible}
+          revisions={revisions}
+          onRevisionClick={setSelectedRevision}
+          onClose={() => setIsContextOpen(false)}
+        />
+      ) : (
+        <aside className="hidden min-h-0 min-w-0 xl:flex xl:justify-end">
+          <div className="flex h-full w-12 items-start justify-center border-l border-slate-300 bg-slate-50 pt-3">
+            <button
+              type="button"
+              className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100"
+              onClick={() => setIsContextOpen(true)}
+              aria-label="컨텍스트 패널 열기"
+              title="컨텍스트 열기"
+            >
+              <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+                <path d="M5.5 4.5V15.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                <path d="M11.5 6.5L7.5 10L11.5 13.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }

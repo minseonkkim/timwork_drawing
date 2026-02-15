@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { toImagePath } from "../lib/metadata";
 
@@ -34,13 +34,46 @@ export function DrawingViewer({
   primaryImageSize,
   onPrimaryImageLoad,
 }: DrawingViewerProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [shouldAutoCenter, setShouldAutoCenter] = useState(true);
+
+  const getCenteredPan = () => {
+    const scale = zoom / 100;
+    const contentWidth = primaryImageSize.width * scale;
+    const contentHeight = primaryImageSize.height * scale;
+    return {
+      x: (containerSize.width - contentWidth) / 2,
+      y: (containerSize.height - contentHeight) / 2,
+    };
+  };
 
   useEffect(() => {
-    setPan({ x: 0, y: 0 });
     setDragStart(null);
+    setShouldAutoCenter(true);
   }, [primaryImage]);
+
+  useEffect(() => {
+    const updateContainerSize = () => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setContainerSize({ width: rect.width, height: rect.height });
+    };
+
+    updateContainerSize();
+    window.addEventListener("resize", updateContainerSize);
+    return () => window.removeEventListener("resize", updateContainerSize);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldAutoCenter) return;
+    if (containerSize.width <= 0 || containerSize.height <= 0) return;
+    if (primaryImageSize.width <= 0 || primaryImageSize.height <= 0) return;
+    setPan(getCenteredPan());
+    setShouldAutoCenter(false);
+  }, [containerSize.height, containerSize.width, primaryImageSize.height, primaryImageSize.width, shouldAutoCenter, zoom]);
 
   const onMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -88,6 +121,7 @@ export function DrawingViewer({
   return (
     <section className="min-h-0 flex-1 overflow-hidden p-4">
       <div
+        ref={containerRef}
         className={`relative h-full w-full overflow-hidden rounded-md border border-slate-300 bg-slate-200 ${
           dragStart ? "cursor-grabbing" : "cursor-grab"
         }`}

@@ -16,7 +16,9 @@ export function SiteMapNavigator({
   onSelectDrawing,
 }: SiteMapNavigatorProps) {
   const [rootImageSize, setRootImageSize] = useState({ width: 0, height: 0 });
-  const visibleDrawings = childDrawings.filter((drawing) => drawing.position?.vertices?.length);
+  const visibleDrawings = childDrawings.filter(
+    (drawing) => drawing.position?.vertices?.length,
+  );
 
   const getCentroid = (drawing: Drawing) => {
     const vertices = drawing.position?.vertices ?? [];
@@ -32,7 +34,6 @@ export function SiteMapNavigator({
 
   return (
     <section className="mb-4">
-      <h2 className="mb-2 text-sm font-semibold text-slate-700">배치도 탐색</h2>
       <div className="relative overflow-hidden rounded-md border border-slate-300 bg-white">
         <img
           className="block h-auto w-full select-none"
@@ -51,60 +52,64 @@ export function SiteMapNavigator({
             viewBox={`0 0 ${rootImageSize.width} ${rootImageSize.height}`}
           >
             {visibleDrawings.map((drawing) => {
-                const points = drawing.position!.vertices.map(([x, y]) => `${x},${y}`).join(" ");
-                const center = getCentroid(drawing);
-                const isSelected = drawing.id === selectedDrawingId;
-                return (
-                  <g key={drawing.id}>
-                    <polygon
-                      points={points}
-                      className="cursor-pointer transition-opacity hover:fill-opacity-55"
-                      fill={isSelected ? "#0284c7" : "#0ea5e9"}
-                      fillOpacity={isSelected ? 0.5 : 0.32}
-                      stroke="#ffffff"
-                      strokeOpacity={0.95}
-                      strokeWidth={12}
-                      onClick={() => onSelectDrawing(drawing.id)}
-                    >
-                      <title>{drawing.name}</title>
-                    </polygon>
-                    <polygon
-                      points={points}
-                      className="cursor-pointer"
-                      fill="none"
-                      stroke={isSelected ? "#082f49" : "#0c4a6e"}
-                      strokeOpacity={0.95}
-                      strokeWidth={5}
-                      onClick={() => onSelectDrawing(drawing.id)}
+              const points = drawing
+                .position!.vertices.map(([x, y]) => `${x},${y}`)
+                .join(" ");
+              const center = getCentroid(drawing);
+              const isSelected = drawing.id === selectedDrawingId;
+              return (
+                <g key={drawing.id}>
+                  <polygon
+                    points={points}
+                    className="cursor-pointer transition-opacity hover:fill-opacity-55"
+                    fill={isSelected ? "#0284c7" : "#0ea5e9"}
+                    fillOpacity={isSelected ? 0.5 : 0.32}
+                    stroke="#ffffff"
+                    strokeOpacity={0.95}
+                    strokeWidth={12}
+                    onClick={() => onSelectDrawing(drawing.id)}
+                  >
+                    <title>{drawing.name}</title>
+                  </polygon>
+                  <polygon
+                    points={points}
+                    className="cursor-pointer"
+                    fill="none"
+                    stroke={isSelected ? "#082f49" : "#0c4a6e"}
+                    strokeOpacity={0.95}
+                    strokeWidth={5}
+                    onClick={() => onSelectDrawing(drawing.id)}
+                  />
+                  <g pointerEvents="none">
+                    <rect
+                      x={center.x - 58}
+                      y={center.y - 14}
+                      width={116}
+                      height={24}
+                      rx={6}
+                      fill="rgba(15,23,42,0.74)"
                     />
-                    <g pointerEvents="none">
-                      <rect
-                        x={center.x - 58}
-                        y={center.y - 14}
-                        width={116}
-                        height={24}
-                        rx={6}
-                        fill="rgba(15,23,42,0.74)"
-                      />
-                      <text
-                        x={center.x}
-                        y={center.y - 1}
-                        fill="#f8fafc"
-                        fontSize="16"
-                        fontWeight="700"
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        {drawing.name}
-                      </text>
-                    </g>
+                    <text
+                      x={center.x}
+                      y={center.y - 1}
+                      fill="#f8fafc"
+                      fontSize="16"
+                      fontWeight="700"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                    >
+                      {drawing.name}
+                    </text>
                   </g>
-                );
-              })}
+                </g>
+              );
+            })}
           </svg>
         )}
       </div>
-      <p className="mt-1 text-xs text-slate-500">영역 클릭 시 해당 도면으로 이동합니다.</p>
+      <p className="mt-1 text-xs text-slate-500">
+        영역 클릭 시 해당 도면으로 이동합니다.
+      </p>
     </section>
   );
 }

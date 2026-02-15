@@ -49,7 +49,7 @@ export function DrawingSidebar({
                   selected
                     ? "border-sky-700 bg-sky-50 ring-1 ring-inset ring-sky-700"
                     : "border-slate-300 bg-white hover:bg-slate-100"
-                }`}
+                } cursor-pointer`}
                 onClick={() => onSelectDrawing(drawing.id)}
                 type="button"
               >

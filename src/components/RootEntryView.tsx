@@ -125,7 +125,7 @@ export function RootEntryView({
                 isSelected
                   ? "border-sky-700 bg-sky-100 text-sky-900"
                   : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-              }`}
+              } cursor-pointer`}
             >
               {drawing.name}
             </button>
