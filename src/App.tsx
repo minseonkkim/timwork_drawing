@@ -271,8 +271,8 @@ function App() {
     <div
       className={`grid h-screen grid-cols-1 overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 ${
         isContextOpen
-          ? "xl:grid-cols-[280px_minmax(0,1fr)_240px]"
-          : "xl:grid-cols-[280px_minmax(0,1fr)_48px]"
+          ? "grid-cols-[280px_minmax(0,1fr)_240px]"
+          : "grid-cols-[280px_minmax(0,1fr)_48px]"
       }`}
     >
       <DrawingSidebar
@@ -290,7 +290,7 @@ function App() {
         }}
       />
 
-      <main className="flex min-h-0 min-w-0 flex-col bg-slate-100 xl:border-r xl:border-slate-300">
+      <main className="flex min-h-0 min-w-0 flex-col border-r border-slate-300 bg-slate-100">
         {isRootSelected && rootDrawing ? (
           <RootEntryView
             rootDrawing={rootDrawing}
@@ -372,7 +372,7 @@ function App() {
           onClose={() => setIsContextOpen(false)}
         />
       ) : (
-        <aside className="hidden min-h-0 min-w-0 xl:flex xl:justify-end">
+        <aside className="min-h-0 min-w-0 flex justify-end">
           <div className="flex h-full w-12 items-start justify-center border-l border-slate-300 bg-slate-50 pt-3">
             <button
               type="button"

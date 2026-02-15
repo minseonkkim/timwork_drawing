@@ -31,7 +31,7 @@ export function RootEntryView({
   };
 
   return (
-    <section className="flex min-h-[60vh] flex-1 flex-col gap-3 overflow-auto p-4 xl:min-h-0">
+    <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-4">
       <div className="rounded-md border border-slate-300 bg-slate-50 p-3">
         <h2 className="text-base font-semibold">배치도에서 공간 선택</h2>
         <p className="mt-1 text-sm text-slate-600">

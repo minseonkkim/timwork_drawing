@@ -35,7 +35,7 @@ export function ContextPanel({
   onClose,
 }: ContextPanelProps) {
   return (
-    <aside className="min-h-0 min-w-0 overflow-auto border-t border-slate-300 bg-slate-50 p-3 xl:border-t-0">
+    <aside className="min-h-0 min-w-0 overflow-auto border-t border-slate-300 bg-slate-50 p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="text-base">현재 컨텍스트</h2>
         <button
