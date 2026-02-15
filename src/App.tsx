@@ -2,6 +2,7 @@
 import { ContextPanel } from "./components/ContextPanel";
 import { DrawingSidebar } from "./components/DrawingSidebar";
 import { DrawingViewer } from "./components/DrawingViewer";
+import { RootEntryView } from "./components/RootEntryView";
 import { TopControls } from "./components/TopControls";
 import {
   fetchMetadata,
@@ -45,10 +46,9 @@ function App() {
         setLoading(true);
         const payload = await fetchMetadata();
         const root = getRootDrawing(payload);
-        const children = root ? getChildDrawings(payload, root.id) : [];
 
         setMetadata(payload);
-        setSelectedDrawingId(children[0]?.id ?? root?.id ?? null);
+        setSelectedDrawingId(root?.id ?? null);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "알 수 없는 오류");
       } finally {
@@ -77,6 +77,7 @@ function App() {
       allDrawings.find((drawing) => drawing.id === selectedDrawingId),
     [allDrawings, drawings, selectedDrawingId],
   );
+  const isRootSelected = selectedDrawing?.id === rootDrawing?.id;
 
   const disciplineNames = useMemo(() => getDisciplineNames(selectedDrawing), [selectedDrawing]);
 
@@ -279,50 +280,66 @@ function App() {
       />
 
       <main className="flex min-w-0 flex-col bg-slate-100 xl:border-r xl:border-slate-300">
-        <TopControls
-          disciplineNames={disciplineNames}
-          selectedDiscipline={selectedDiscipline}
-          onDisciplineChange={(discipline) => {
-            setSelectedDiscipline(discipline);
-            setSelectedRegion("");
-            setSelectedRevision("");
-          }}
-          regionNames={regionNames}
-          selectedRegion={selectedRegion}
-          onRegionChange={(region) => {
-            setSelectedRegion(region);
-            setSelectedRevision("");
-          }}
-          revisions={revisions}
-          selectedRevision={selectedRevision}
-          onRevisionChange={setSelectedRevision}
-          overlayEnabled={overlayEnabled}
-          onOverlayEnabledChange={setOverlayEnabled}
-          overlayCandidates={overlayCandidates}
-          overlayDisciplineName={overlayDisciplineName}
-          onOverlayDisciplineChange={setOverlayDisciplineName}
-          overlayOpacity={overlayOpacity}
-          onOverlayOpacityChange={setOverlayOpacity}
-          polygonVisible={polygonVisible}
-          onPolygonVisibleChange={setPolygonVisible}
-          polygonOpacity={polygonOpacity}
-          onPolygonOpacityChange={setPolygonOpacity}
-          hasActivePolygon={Boolean(activePolygon)}
-          zoom={zoom}
-          onZoomChange={setZoom}
-        />
-        <DrawingViewer
-          zoom={zoom}
-          primaryImage={primaryImage}
-          overlayImage={overlayImage}
-          overlayStyle={overlayStyle}
-          polygonVisible={polygonVisible}
-          polygonOpacity={polygonOpacity}
-          hasActivePolygon={Boolean(activePolygon)}
-          scaledPolygonPoints={scaledPolygonPoints}
-          primaryImageSize={primaryImageSize}
-          onPrimaryImageLoad={(width, height) => setPrimaryImageSize({ width, height })}
-        />
+        {isRootSelected && rootDrawing ? (
+          <RootEntryView
+            rootDrawing={rootDrawing}
+            childDrawings={rootChildDrawings}
+            selectedDrawingId={selectedDrawing.id}
+            onSelectDrawing={(drawingId) => {
+              setSelectedDrawingId(drawingId);
+              setSelectedRegion("");
+              setSelectedRevision("");
+              setOverlayEnabled(false);
+            }}
+          />
+        ) : (
+          <>
+            <TopControls
+              disciplineNames={disciplineNames}
+              selectedDiscipline={selectedDiscipline}
+              onDisciplineChange={(discipline) => {
+                setSelectedDiscipline(discipline);
+                setSelectedRegion("");
+                setSelectedRevision("");
+              }}
+              regionNames={regionNames}
+              selectedRegion={selectedRegion}
+              onRegionChange={(region) => {
+                setSelectedRegion(region);
+                setSelectedRevision("");
+              }}
+              revisions={revisions}
+              selectedRevision={selectedRevision}
+              onRevisionChange={setSelectedRevision}
+              overlayEnabled={overlayEnabled}
+              onOverlayEnabledChange={setOverlayEnabled}
+              overlayCandidates={overlayCandidates}
+              overlayDisciplineName={overlayDisciplineName}
+              onOverlayDisciplineChange={setOverlayDisciplineName}
+              overlayOpacity={overlayOpacity}
+              onOverlayOpacityChange={setOverlayOpacity}
+              polygonVisible={polygonVisible}
+              onPolygonVisibleChange={setPolygonVisible}
+              polygonOpacity={polygonOpacity}
+              onPolygonOpacityChange={setPolygonOpacity}
+              hasActivePolygon={Boolean(activePolygon)}
+              zoom={zoom}
+              onZoomChange={setZoom}
+            />
+            <DrawingViewer
+              zoom={zoom}
+              primaryImage={primaryImage}
+              overlayImage={overlayImage}
+              overlayStyle={overlayStyle}
+              polygonVisible={polygonVisible}
+              polygonOpacity={polygonOpacity}
+              hasActivePolygon={Boolean(activePolygon)}
+              scaledPolygonPoints={scaledPolygonPoints}
+              primaryImageSize={primaryImageSize}
+              onPrimaryImageLoad={(width, height) => setPrimaryImageSize({ width, height })}
+            />
+          </>
+        )}
       </main>
 
       <ContextPanel
