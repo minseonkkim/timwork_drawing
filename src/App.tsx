@@ -1,4 +1,8 @@
 ﻿import { useEffect, useMemo, useState } from "react";
+import { ContextPanel } from "./components/ContextPanel";
+import { DrawingSidebar } from "./components/DrawingSidebar";
+import { DrawingViewer } from "./components/DrawingViewer";
+import { TopControls } from "./components/TopControls";
 import {
   fetchMetadata,
   getChildDrawings,
@@ -14,10 +18,7 @@ import {
   getTransformDelta,
   toImagePath,
 } from "./lib/metadata";
-import type { Discipline, Drawing, Metadata, Polygon, Revision } from "./types/metadata";
-
-const controlClass =
-  "rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 disabled:cursor-not-allowed disabled:bg-slate-100";
+import type { Discipline, Metadata, Polygon, Revision } from "./types/metadata";
 
 function App() {
   const [metadata, setMetadata] = useState<Metadata | null>(null);
@@ -59,7 +60,6 @@ function App() {
   }, []);
 
   const allDrawings = useMemo(() => (metadata ? getSortedDrawings(metadata) : []), [metadata]);
-
   const rootDrawing = useMemo(() => (metadata ? getRootDrawing(metadata) : undefined), [metadata]);
 
   const drawings = useMemo(
@@ -111,7 +111,6 @@ function App() {
   }, [regionNames, selectedRegion]);
 
   const primaryRegion = useMemo(() => getRegion(primaryDiscipline, selectedRegion), [primaryDiscipline, selectedRegion]);
-
   const revisions = useMemo(
     () => getRevisionCollection(primaryDiscipline, primaryRegion),
     [primaryDiscipline, primaryRegion],
@@ -260,291 +259,82 @@ function App() {
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 xl:grid-cols-[280px_minmax(0,1fr)_320px]">
-      <aside className="min-w-0 overflow-auto border-b border-slate-300 bg-slate-50 p-4 xl:border-r xl:border-b-0">
-        <h1 className="mb-3 text-lg font-semibold">도면 탐색</h1>
-        <input
-          className="mb-3 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="도면 이름 검색"
-        />
-        <ul className="flex list-none flex-col gap-1.5 p-0">
-          {drawings.map((drawing: Drawing) => {
-            const selected = drawing.id === selectedDrawing.id;
-            const isRoot = rootDrawing?.id === drawing.id;
-            return (
-              <li key={drawing.id}>
-                <button
-                  className={`flex w-full items-center gap-2 rounded-md border px-2.5 py-2 text-left text-sm ${
-                    selected
-                      ? "border-sky-700 bg-sky-50 ring-1 ring-inset ring-sky-700"
-                      : "border-slate-300 bg-white hover:bg-slate-100"
-                  }`}
-                  onClick={() => {
-                    setSelectedDrawingId(drawing.id);
-                    setSelectedRegion("");
-                    setSelectedRevision("");
-                    setOverlayEnabled(false);
-                  }}
-                  type="button"
-                >
-                  <span className="rounded-full border border-slate-300 px-2 py-0.5 text-[11px] text-slate-500">{drawing.id}</span>
-                  <span className="truncate">{drawing.name}</span>
-                  {isRoot && <span className="ml-auto text-[11px] text-sky-800">루트</span>}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </aside>
+      <DrawingSidebar
+        drawings={drawings}
+        selectedDrawingId={selectedDrawing.id}
+        rootDrawingId={rootDrawing?.id}
+        query={query}
+        onQueryChange={setQuery}
+        onSelectDrawing={(drawingId) => {
+          setSelectedDrawingId(drawingId);
+          setSelectedRegion("");
+          setSelectedRevision("");
+          setOverlayEnabled(false);
+        }}
+      />
 
       <main className="flex min-w-0 flex-col bg-slate-100 xl:border-r xl:border-slate-300">
-        <header className="border-b border-slate-300 bg-slate-50 p-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 text-sm">
-              공종
-              <select
-                className={controlClass}
-                disabled={disciplineNames.length === 0}
-                value={selectedDiscipline}
-                onChange={(event) => {
-                  setSelectedDiscipline(event.target.value);
-                  setSelectedRegion("");
-                  setSelectedRevision("");
-                }}
-              >
-                {disciplineNames.map((disciplineName) => (
-                  <option key={disciplineName} value={disciplineName}>
-                    {disciplineName}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex items-center gap-2 text-sm">
-              영역
-              <select
-                className={controlClass}
-                disabled={regionNames.length === 0}
-                value={selectedRegion}
-                onChange={(event) => {
-                  setSelectedRegion(event.target.value);
-                  setSelectedRevision("");
-                }}
-              >
-                {regionNames.length === 0 && <option value="">없음</option>}
-                {regionNames.map((regionName) => (
-                  <option key={regionName} value={regionName}>
-                    {regionName}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex items-center gap-2 text-sm">
-              리비전
-              <select
-                className={controlClass}
-                disabled={revisions.length === 0}
-                value={selectedRevision}
-                onChange={(event) => setSelectedRevision(event.target.value)}
-              >
-                {revisions.map((revision) => (
-                  <option key={revision.version} value={revision.version}>
-                    {revision.version} ({revision.date})
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 border-r border-slate-300 pr-3 text-sm">
-              <input
-                type="checkbox"
-                checked={overlayEnabled}
-                onChange={(event) => setOverlayEnabled(event.target.checked)}
-                disabled={overlayCandidates.length === 0}
-              />
-              공종 겹쳐보기
-            </label>
-
-            <label className="flex items-center gap-2 text-sm">
-              오버레이 공종
-              <select
-                className={controlClass}
-                disabled={!overlayEnabled || overlayCandidates.length === 0}
-                value={overlayDisciplineName}
-                onChange={(event) => setOverlayDisciplineName(event.target.value)}
-              >
-                {overlayCandidates.map((disciplineName) => (
-                  <option key={disciplineName} value={disciplineName}>
-                    {disciplineName}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex items-center gap-2 text-sm">
-              오버레이 투명도 {overlayOpacity}%
-              <input
-                className="w-32"
-                type="range"
-                min={10}
-                max={100}
-                value={overlayOpacity}
-                disabled={!overlayEnabled}
-                onChange={(event) => setOverlayOpacity(Number(event.target.value))}
-              />
-            </label>
-
-            <label className="flex items-center gap-2 border-l border-slate-300 pl-3 text-sm">
-              <input
-                type="checkbox"
-                checked={polygonVisible}
-                onChange={(event) => setPolygonVisible(event.target.checked)}
-                disabled={!activePolygon}
-              />
-              영역 표시
-            </label>
-
-            <label className="flex items-center gap-2 text-sm">
-              영역 투명도 {polygonOpacity}%
-              <input
-                className="w-24"
-                type="range"
-                min={10}
-                max={60}
-                value={polygonOpacity}
-                disabled={!polygonVisible || !activePolygon}
-                onChange={(event) => setPolygonOpacity(Number(event.target.value))}
-              />
-            </label>
-
-            <label className="flex items-center gap-2 text-sm">
-              줌 {zoom}%
-              <input
-                className="w-32"
-                type="range"
-                min={20}
-                max={100}
-                value={zoom}
-                onChange={(event) => setZoom(Number(event.target.value))}
-              />
-            </label>
-          </div>
-        </header>
-
-        <section className="min-h-[60vh] flex-1 overflow-auto p-4 xl:min-h-0">
-          <div
-            className="relative inline-block origin-top-left shadow-[0_20px_30px_rgba(16,33,49,0.15)]"
-            style={{ transform: `scale(${zoom / 100})` }}
-          >
-            <img
-              className="block max-w-none select-none"
-              src={toImagePath(primaryImage)}
-              alt={primaryImage}
-              onLoad={(event) =>
-                setPrimaryImageSize({
-                  width: event.currentTarget.naturalWidth,
-                  height: event.currentTarget.naturalHeight,
-                })
-              }
-            />
-            {overlayImage && (
-              <img
-                className="pointer-events-none absolute left-0 top-0 max-w-none select-none"
-                src={toImagePath(overlayImage)}
-                alt={overlayImage}
-                style={overlayStyle}
-              />
-            )}
-            {activePolygon && scaledPolygonPoints && primaryImageSize.width > 0 && primaryImageSize.height > 0 && (
-              <svg
-                className="pointer-events-none absolute left-0 top-0 max-w-none"
-                width={primaryImageSize.width}
-                height={primaryImageSize.height}
-                viewBox={`0 0 ${primaryImageSize.width} ${primaryImageSize.height}`}
-                style={{ display: polygonVisible ? "block" : "none" }}
-              >
-                <polygon
-                  points={scaledPolygonPoints}
-                  fill="#0ea5e9"
-                  fillOpacity={polygonOpacity / 100}
-                  stroke="#0369a1"
-                  strokeWidth={8}
-                  strokeOpacity={0.9}
-                />
-              </svg>
-            )}
-          </div>
-        </section>
+        <TopControls
+          disciplineNames={disciplineNames}
+          selectedDiscipline={selectedDiscipline}
+          onDisciplineChange={(discipline) => {
+            setSelectedDiscipline(discipline);
+            setSelectedRegion("");
+            setSelectedRevision("");
+          }}
+          regionNames={regionNames}
+          selectedRegion={selectedRegion}
+          onRegionChange={(region) => {
+            setSelectedRegion(region);
+            setSelectedRevision("");
+          }}
+          revisions={revisions}
+          selectedRevision={selectedRevision}
+          onRevisionChange={setSelectedRevision}
+          overlayEnabled={overlayEnabled}
+          onOverlayEnabledChange={setOverlayEnabled}
+          overlayCandidates={overlayCandidates}
+          overlayDisciplineName={overlayDisciplineName}
+          onOverlayDisciplineChange={setOverlayDisciplineName}
+          overlayOpacity={overlayOpacity}
+          onOverlayOpacityChange={setOverlayOpacity}
+          polygonVisible={polygonVisible}
+          onPolygonVisibleChange={setPolygonVisible}
+          polygonOpacity={polygonOpacity}
+          onPolygonOpacityChange={setPolygonOpacity}
+          hasActivePolygon={Boolean(activePolygon)}
+          zoom={zoom}
+          onZoomChange={setZoom}
+        />
+        <DrawingViewer
+          zoom={zoom}
+          primaryImage={primaryImage}
+          overlayImage={overlayImage}
+          overlayStyle={overlayStyle}
+          polygonVisible={polygonVisible}
+          polygonOpacity={polygonOpacity}
+          hasActivePolygon={Boolean(activePolygon)}
+          scaledPolygonPoints={scaledPolygonPoints}
+          primaryImageSize={primaryImageSize}
+          onPrimaryImageLoad={(width, height) => setPrimaryImageSize({ width, height })}
+        />
       </main>
 
-      <aside className="min-w-0 overflow-auto border-t border-slate-300 bg-slate-50 p-4 xl:border-t-0">
-        <h2 className="mb-3 text-lg font-semibold">현재 컨텍스트</h2>
-        <div className="rounded-md border border-sky-200 bg-sky-50 p-2.5 text-xs">{breadcrumb.join(" / ")}</div>
-
-        <dl className="mt-3 grid grid-cols-[100px_1fr] gap-x-2.5 gap-y-2 text-sm">
-          <dt className="text-slate-600">현재 도면</dt>
-          <dd className="m-0">{selectedDrawing.name}</dd>
-          <dt className="text-slate-600">현재 공종</dt>
-          <dd className="m-0">{selectedDiscipline || "-"}</dd>
-          <dt className="text-slate-600">현재 리비전</dt>
-          <dd className="m-0">{primaryRevision ? `${primaryRevision.version} (${primaryRevision.date})` : "-"}</dd>
-          <dt className="text-slate-600">주요 설명</dt>
-          <dd className="m-0">{primaryRevision?.description ?? "리비전 정보 없음"}</dd>
-          <dt className="text-slate-600">변경점</dt>
-          <dd className="m-0">
-            {primaryRevision && primaryRevision.changes.length > 0
-              ? primaryRevision.changes.join(", ")
-              : "초기 설계 또는 변경 없음"}
-          </dd>
-          <dt className="text-slate-600">기준 정렬</dt>
-          <dd className="m-0">{primaryTransform.relativeTo ?? "기준 없음(기본 좌표계)"}</dd>
-          <dt className="text-slate-600">영역 표시</dt>
-          <dd className="m-0">{activePolygon ? "표시 중(좌표 스케일 보정)" : "해당 없음"}</dd>
-        </dl>
-
-        {overlayEnabled && overlayImage && (
-          <div className="mt-4 rounded-md border border-slate-200 bg-slate-100 p-2.5 text-sm">
-            <h3 className="mb-1.5 text-sm font-semibold">겹쳐보기 상태</h3>
-            <p className="my-1">대상 공종: {overlayDisciplineName}</p>
-            <p className="my-1">대상 리비전: {overlayLatestRevision?.version ?? "없음"}</p>
-            <p className="my-1">
-              정렬 기준:
-              {transformDelta.compatible ? " 자동 정렬 적용" : " 기준 이미지 불일치로 기본 오버레이"}
-            </p>
-          </div>
-        )}
-
-        <div className="mt-4">
-          <h3 className="mb-2 text-sm font-semibold">리비전 이력</h3>
-          <ul className="flex list-none flex-col gap-1.5 p-0">
-            {revisions.map((revision) => {
-              const isSelected = revision.version === primaryRevision?.version;
-              const isLatest = revision.version === getLatestRevision(revisions)?.version;
-              return (
-                <li key={revision.version}>
-                  <button
-                    className={`w-full rounded-md border px-2.5 py-2 text-left text-sm ${
-                      isSelected
-                        ? "border-sky-700 bg-sky-50 ring-1 ring-inset ring-sky-700"
-                        : "border-slate-300 bg-white hover:bg-slate-100"
-                    }`}
-                    type="button"
-                    onClick={() => setSelectedRevision(revision.version)}
-                  >
-                    {revision.version} / {revision.date}
-                    {isLatest && " / 최신"}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </aside>
+      <ContextPanel
+        breadcrumb={breadcrumb}
+        selectedDrawingName={selectedDrawing.name}
+        selectedDiscipline={selectedDiscipline}
+        primaryRevision={primaryRevision}
+        primaryRelativeTo={primaryTransform.relativeTo}
+        hasActivePolygon={Boolean(activePolygon)}
+        overlayEnabled={overlayEnabled}
+        overlayImage={overlayImage}
+        overlayDisciplineName={overlayDisciplineName}
+        overlayLatestRevisionVersion={overlayLatestRevision?.version}
+        overlayTransformCompatible={transformDelta.compatible}
+        revisions={revisions}
+        onRevisionClick={setSelectedRevision}
+      />
     </div>
   );
 }
