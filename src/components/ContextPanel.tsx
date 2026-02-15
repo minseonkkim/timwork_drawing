@@ -33,7 +33,7 @@ export function ContextPanel({
   onRevisionClick,
 }: ContextPanelProps) {
   return (
-    <aside className="min-w-0 overflow-auto border-t border-slate-300 bg-slate-50 p-4 xl:border-t-0">
+    <aside className="min-h-0 min-w-0 overflow-auto border-t border-slate-300 bg-slate-50 p-4 xl:border-t-0">
       <h2 className="mb-3 text-lg font-semibold">현재 컨텍스트</h2>
       <div className="rounded-md border border-sky-200 bg-sky-50 p-2.5 text-xs">{breadcrumb.join(" / ")}</div>
 

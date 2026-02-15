@@ -21,7 +21,7 @@ export function DrawingSidebar({
   onSelectDrawing,
 }: DrawingSidebarProps) {
   return (
-    <aside className="min-w-0 overflow-auto border-b border-slate-300 bg-slate-50 p-4 xl:border-r xl:border-b-0">
+    <aside className="min-h-0 min-w-0 overflow-auto border-b border-slate-300 bg-slate-50 p-4 xl:border-r xl:border-b-0">
       <h1 className="mb-3 text-lg font-semibold">도면 탐색</h1>
       {rootDrawing && (
         <SiteMapNavigator

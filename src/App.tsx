@@ -251,19 +251,19 @@ function App() {
   }, [metadata?.project.name, primaryRevision, selectedDiscipline, selectedDrawing, selectedRegion]);
 
   if (loading) {
-    return <div className="grid min-h-screen place-content-center text-lg text-slate-700">메타데이터를 불러오는 중...</div>;
+    return <div className="grid h-screen place-content-center text-lg text-slate-700">메타데이터를 불러오는 중...</div>;
   }
 
   if (error || !metadata || !selectedDrawing) {
     return (
-      <div className="grid min-h-screen place-content-center text-lg text-red-900">
+      <div className="grid h-screen place-content-center text-lg text-red-900">
         불러오기에 실패했습니다: {error ?? "도면 선택 실패"}
       </div>
     );
   }
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 xl:grid-cols-[280px_minmax(0,1fr)_320px]">
+    <div className="grid h-screen grid-cols-1 overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 xl:grid-cols-[280px_minmax(0,1fr)_320px]">
       <DrawingSidebar
         drawings={drawings}
         selectedDrawingId={selectedDrawing.id}
@@ -279,7 +279,7 @@ function App() {
         }}
       />
 
-      <main className="flex min-w-0 flex-col bg-slate-100 xl:border-r xl:border-slate-300">
+      <main className="flex min-h-0 min-w-0 flex-col bg-slate-100 xl:border-r xl:border-slate-300">
         {isRootSelected && rootDrawing ? (
           <RootEntryView
             rootDrawing={rootDrawing}
@@ -326,11 +326,12 @@ function App() {
               zoom={zoom}
               onZoomChange={setZoom}
             />
-            <DrawingViewer
-              zoom={zoom}
-              primaryImage={primaryImage}
-              overlayImage={overlayImage}
-              overlayStyle={overlayStyle}
+        <DrawingViewer
+          zoom={zoom}
+          onZoomChange={setZoom}
+          primaryImage={primaryImage}
+          overlayImage={overlayImage}
+          overlayStyle={overlayStyle}
               polygonVisible={polygonVisible}
               polygonOpacity={polygonOpacity}
               hasActivePolygon={Boolean(activePolygon)}
