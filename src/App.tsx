@@ -61,6 +61,10 @@ function App() {
 
   const allDrawings = useMemo(() => (metadata ? getSortedDrawings(metadata) : []), [metadata]);
   const rootDrawing = useMemo(() => (metadata ? getRootDrawing(metadata) : undefined), [metadata]);
+  const rootChildDrawings = useMemo(
+    () => (metadata && rootDrawing ? getChildDrawings(metadata, rootDrawing.id) : []),
+    [metadata, rootDrawing],
+  );
 
   const drawings = useMemo(
     () => allDrawings.filter((drawing) => drawing.name.toLowerCase().includes(query.trim().toLowerCase())),
@@ -262,7 +266,8 @@ function App() {
       <DrawingSidebar
         drawings={drawings}
         selectedDrawingId={selectedDrawing.id}
-        rootDrawingId={rootDrawing?.id}
+        rootDrawing={rootDrawing}
+        rootChildDrawings={rootChildDrawings}
         query={query}
         onQueryChange={setQuery}
         onSelectDrawing={(drawingId) => {

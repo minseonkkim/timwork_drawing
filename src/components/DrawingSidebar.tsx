@@ -1,9 +1,11 @@
 import type { Drawing } from "../types/metadata";
+import { SiteMapNavigator } from "./SiteMapNavigator";
 
 interface DrawingSidebarProps {
   drawings: Drawing[];
   selectedDrawingId: string;
-  rootDrawingId?: string;
+  rootDrawing?: Drawing;
+  rootChildDrawings: Drawing[];
   query: string;
   onQueryChange: (query: string) => void;
   onSelectDrawing: (drawingId: string) => void;
@@ -12,7 +14,8 @@ interface DrawingSidebarProps {
 export function DrawingSidebar({
   drawings,
   selectedDrawingId,
-  rootDrawingId,
+  rootDrawing,
+  rootChildDrawings,
   query,
   onQueryChange,
   onSelectDrawing,
@@ -20,6 +23,14 @@ export function DrawingSidebar({
   return (
     <aside className="min-w-0 overflow-auto border-b border-slate-300 bg-slate-50 p-4 xl:border-r xl:border-b-0">
       <h1 className="mb-3 text-lg font-semibold">도면 탐색</h1>
+      {rootDrawing && (
+        <SiteMapNavigator
+          rootDrawing={rootDrawing}
+          childDrawings={rootChildDrawings}
+          selectedDrawingId={selectedDrawingId}
+          onSelectDrawing={onSelectDrawing}
+        />
+      )}
       <input
         className="mb-3 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
         type="search"
@@ -30,7 +41,7 @@ export function DrawingSidebar({
       <ul className="flex list-none flex-col gap-1.5 p-0">
         {drawings.map((drawing) => {
           const selected = drawing.id === selectedDrawingId;
-          const isRoot = rootDrawingId === drawing.id;
+          const isRoot = rootDrawing?.id === drawing.id;
           return (
             <li key={drawing.id}>
               <button
