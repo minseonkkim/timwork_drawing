@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+﻿# drowing-viewer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+건설 도면 메타데이터(`metadata.json`)를 기반으로 도면을 탐색하고, 공종/리비전 컨텍스트를 확인할 수 있는 프로토타입입니다.
 
-Currently, two official plugins are available:
+## 실행 방법
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 기술 스택
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 구현 기능
+
+- [x] 도면 탐색을 지원합니다.
+- [x] 도면 표시를 지원합니다.
+- [x] 컨텍스트 인식(현재 도면/공종/영역/리비전)을 지원합니다.
+- [x] 공종/영역/리비전 선택 탐색을 지원합니다.
+- [x] 리비전 최신 자동 선택 및 이력 탐색을 지원합니다.
+- [x] 공종 겹쳐보기(오버레이)와 투명도 조절을 지원합니다.
+- [x] 폴리곤/영역 시각화를 지원합니다.
+- [x] 배치도 기반 공간 선택(전체 배치도에서 건물 클릭 진입)을 지원합니다.
+- [x] 뷰어 인터랙션(드래그 팬, 마우스 휠 줌, 도면 변경 시 중앙 정렬)을 지원합니다.
+- [x] 도면 로딩 오버레이 표시를 지원합니다.
+- [x] 우측 컨텍스트 패널 열기/닫기를 지원합니다.
+
+## 미완성 기능
+
+- [x] 필수 요구사항 기준 미완성 기능은 없습니다.
+
+## 프로젝트 구조
+
+```text
+src/
+  components/
+    DrawingSidebar.tsx
+    RootEntryView.tsx
+    SiteMapNavigator.tsx
+    TopControls.tsx
+    DrawingViewer.tsx
+    ContextPanel.tsx
+  lib/
+    metadata.ts
+  types/
+    metadata.ts
+  App.tsx
 ```
+
+## 참고
+
+- 현재 레이아웃은 데스크톱 사용성에 맞춘 고정 3열 구조입니다.
+- 데이터 파일은 `public/data/metadata.json`, 이미지 파일은 `public/data/drawings/`를 사용합니다.
