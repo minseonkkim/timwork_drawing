@@ -41,6 +41,8 @@ export function DrawingViewer({
   const [shouldAutoCenter, setShouldAutoCenter] = useState(true);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [isOverlayLoading, setIsOverlayLoading] = useState(false);
+  const [overlayLoadError, setOverlayLoadError] = useState(false);
 
   const getCenteredPan = () => {
     const scale = zoom / 100;
@@ -58,6 +60,16 @@ export function DrawingViewer({
     setIsImageLoading(true);
     setImageLoadError(false);
   }, [primaryImage]);
+
+  useEffect(() => {
+    if (!overlayImage) {
+      setIsOverlayLoading(false);
+      setOverlayLoadError(false);
+      return;
+    }
+    setIsOverlayLoading(true);
+    setOverlayLoadError(false);
+  }, [overlayImage]);
 
   useEffect(() => {
     const updateContainerSize = () => {
@@ -158,6 +170,13 @@ export function DrawingViewer({
               src={toImagePath(overlayImage)}
               alt={overlayImage}
               style={overlayStyle}
+              onLoad={() => {
+                setIsOverlayLoading(false);
+              }}
+              onError={() => {
+                setIsOverlayLoading(false);
+                setOverlayLoadError(true);
+              }}
             />
           )}
           {hasActivePolygon && scaledPolygonPoints && primaryImageSize.width > 0 && primaryImageSize.height > 0 && (
@@ -179,10 +198,17 @@ export function DrawingViewer({
             </svg>
           )}
         </div>
-        {(isImageLoading || imageLoadError) && (
+        {(isImageLoading || imageLoadError || isOverlayLoading || overlayLoadError) && (
           <div className="absolute inset-0 grid place-content-center bg-slate-200/80">
             {imageLoadError ? (
               <p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">도면을 불러오지 못했습니다.</p>
+            ) : overlayLoadError ? (
+              <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">겹쳐보기 도면을 불러오지 못했습니다.</p>
+            ) : isOverlayLoading ? (
+              <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+                겹쳐보기 도면 로딩 중...
+              </div>
             ) : (
               <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
                 <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
