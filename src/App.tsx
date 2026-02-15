@@ -14,7 +14,7 @@ import {
   getTransformDelta,
   toImagePath,
 } from "./lib/metadata";
-import type { Discipline, Drawing, Metadata, Revision } from "./types/metadata";
+import type { Discipline, Drawing, Metadata, Polygon, Revision } from "./types/metadata";
 
 const controlClass =
   "rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 disabled:cursor-not-allowed disabled:bg-slate-100";
@@ -32,7 +32,11 @@ function App() {
   const [overlayEnabled, setOverlayEnabled] = useState(false);
   const [overlayDisciplineName, setOverlayDisciplineName] = useState<string>("");
   const [overlayOpacity, setOverlayOpacity] = useState(55);
+  const [polygonVisible, setPolygonVisible] = useState(true);
+  const [polygonOpacity, setPolygonOpacity] = useState(24);
   const [zoom, setZoom] = useState(35);
+  const [primaryImageSize, setPrimaryImageSize] = useState({ width: 0, height: 0 });
+  const [referenceImageSize, setReferenceImageSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const load = async () => {
@@ -139,6 +143,48 @@ function App() {
     () => getPrimaryTransform(primaryDiscipline, primaryRevision),
     [primaryDiscipline, primaryRevision],
   );
+
+  const activePolygon: Polygon | undefined = useMemo(
+    () => primaryRevision?.polygon ?? primaryRegion?.polygon ?? primaryDiscipline?.polygon,
+    [primaryDiscipline?.polygon, primaryRegion?.polygon, primaryRevision?.polygon],
+  );
+
+  useEffect(() => {
+    const relativeTo = primaryTransform.relativeTo;
+    if (!relativeTo) {
+      setReferenceImageSize({ width: 0, height: 0 });
+      return;
+    }
+
+    const image = new Image();
+    image.onload = () => {
+      setReferenceImageSize({
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+      });
+    };
+    image.onerror = () => {
+      setReferenceImageSize({ width: 0, height: 0 });
+    };
+    image.src = toImagePath(relativeTo);
+  }, [primaryTransform.relativeTo]);
+
+  const polygonCoordinateScale = useMemo(() => {
+    if (referenceImageSize.width <= 0 || referenceImageSize.height <= 0) return { x: 1, y: 1 };
+    if (primaryImageSize.width <= 0 || primaryImageSize.height <= 0) return { x: 1, y: 1 };
+
+    return {
+      x: primaryImageSize.width / referenceImageSize.width,
+      y: primaryImageSize.height / referenceImageSize.height,
+    };
+  }, [primaryImageSize.height, primaryImageSize.width, referenceImageSize.height, referenceImageSize.width]);
+
+  const scaledPolygonPoints = useMemo(() => {
+    if (!activePolygon) return "";
+    return activePolygon.vertices
+      .map(([x, y]) => `${x * polygonCoordinateScale.x},${y * polygonCoordinateScale.y}`)
+      .join(" ");
+  }, [activePolygon, polygonCoordinateScale.x, polygonCoordinateScale.y]);
 
   const overlayCandidates = useMemo(
     () => disciplineNames.filter((disciplineName) => disciplineName !== selectedDiscipline),
@@ -353,6 +399,29 @@ function App() {
               />
             </label>
 
+            <label className="flex items-center gap-2 border-l border-slate-300 pl-3 text-sm">
+              <input
+                type="checkbox"
+                checked={polygonVisible}
+                onChange={(event) => setPolygonVisible(event.target.checked)}
+                disabled={!activePolygon}
+              />
+              영역 표시
+            </label>
+
+            <label className="flex items-center gap-2 text-sm">
+              영역 투명도 {polygonOpacity}%
+              <input
+                className="w-24"
+                type="range"
+                min={10}
+                max={60}
+                value={polygonOpacity}
+                disabled={!polygonVisible || !activePolygon}
+                onChange={(event) => setPolygonOpacity(Number(event.target.value))}
+              />
+            </label>
+
             <label className="flex items-center gap-2 text-sm">
               줌 {zoom}%
               <input
@@ -372,7 +441,17 @@ function App() {
             className="relative inline-block origin-top-left shadow-[0_20px_30px_rgba(16,33,49,0.15)]"
             style={{ transform: `scale(${zoom / 100})` }}
           >
-            <img className="block max-w-none select-none" src={toImagePath(primaryImage)} alt={primaryImage} />
+            <img
+              className="block max-w-none select-none"
+              src={toImagePath(primaryImage)}
+              alt={primaryImage}
+              onLoad={(event) =>
+                setPrimaryImageSize({
+                  width: event.currentTarget.naturalWidth,
+                  height: event.currentTarget.naturalHeight,
+                })
+              }
+            />
             {overlayImage && (
               <img
                 className="pointer-events-none absolute left-0 top-0 max-w-none select-none"
@@ -380,6 +459,24 @@ function App() {
                 alt={overlayImage}
                 style={overlayStyle}
               />
+            )}
+            {activePolygon && scaledPolygonPoints && primaryImageSize.width > 0 && primaryImageSize.height > 0 && (
+              <svg
+                className="pointer-events-none absolute left-0 top-0 max-w-none"
+                width={primaryImageSize.width}
+                height={primaryImageSize.height}
+                viewBox={`0 0 ${primaryImageSize.width} ${primaryImageSize.height}`}
+                style={{ display: polygonVisible ? "block" : "none" }}
+              >
+                <polygon
+                  points={scaledPolygonPoints}
+                  fill="#0ea5e9"
+                  fillOpacity={polygonOpacity / 100}
+                  stroke="#0369a1"
+                  strokeWidth={8}
+                  strokeOpacity={0.9}
+                />
+              </svg>
             )}
           </div>
         </section>
@@ -406,6 +503,8 @@ function App() {
           </dd>
           <dt className="text-slate-600">기준 정렬</dt>
           <dd className="m-0">{primaryTransform.relativeTo ?? "기준 없음(기본 좌표계)"}</dd>
+          <dt className="text-slate-600">영역 표시</dt>
+          <dd className="m-0">{activePolygon ? "표시 중(좌표 스케일 보정)" : "해당 없음"}</dd>
         </dl>
 
         {overlayEnabled && overlayImage && (
